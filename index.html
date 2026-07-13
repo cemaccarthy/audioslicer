@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Audio Cutter">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✂️</text></svg>">
+  <title>Audio Cutter ✂️</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: #f5f5f7;
+      color: #1d1d1f;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 16px;
+      margin: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .app-container {
+      width: 100%;
+      max-width: 500px;
+      background: rgba(255,255,255,0.9);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      background: #ffffff;
+      border-radius: 36px;
+      padding: 20px 20px 30px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      margin-top: 10px;
+      border: 1px solid rgba(0,0,0,0.04);
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 600;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: #000;
+    }
+    .audio-selector {
+      background: #f2f2f7;
+      border-radius: 24px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .file-label {
+      font-weight: 500;
+      font-size: 16px;
+      color: #3a3a3c;
+    }
+    input[type="file"] {
+      display: block;
+      width: 100%;
+      font-size: 15px;
+      padding: 10px 0;
+    }
+    .section-control {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: #f2f2f7;
+      border-radius: 20px;
+      padding: 12px 18px;
+    }
+    .section-control label {
+      font-weight: 500;
+      font-size: 16px;
+    }
+    .section-control input {
+      width: 70px;
+      padding: 10px 12px;
+      border-radius: 16px;
+      border: 1px solid #dcdcde;
+      background: white;
+      font-size: 16px;
+      text-align: center;
+      outline: none;
+    }
+    button {
+      background: #007aff;
+      color: white;
+      border: none;
+      border-radius: 24px;
+      padding: 14px 20px;
+      font-size: 17px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: #007aff;
+      letter-spacing: -0.2px;
+    }
+    button:active {
+      background: #005bbf;
+    }
+    button:disabled {
+      background: #aac7f0;
+      cursor: not-allowed;
+    }
+    .time-inputs-container {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 4px;
+    }
+    .segment-row {
+      background: #f9f9fb;
+      border-radius: 22px;
+      padding: 14px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid #e5e5ea;
+    }
+    .segment-label {
+      font-weight: 600;
+      font-size: 15px;
+      min-width: 70px;
+      color: #1c1c1e;
+    }
+    .time-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      flex: 1;
+    }
+    .time-group input {
+      width: 70px;
+      padding: 10px 8px;
+      border-radius: 14px;
+      border: 1px solid #d1d1d6;
+      font-size: 15px;
+      text-align: center;
+      background: white;
+    }
+    .time-group span {
+      font-size: 14px;
+      color: #6c6c70;
+    }
+    .download-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 8px;
+    }
+    .download-btn {
+      background: #34c759;
+    }
+    .download-btn:active {
+      background: #2da84a;
+    }
+    .status-message {
+      font-size: 15px;
+      color: #8e8e93;
+      text-align: center;
+      padding: 6px;
+      min-height: 24px;
+    }
+    hr {
+      border: 0.5px solid #e0e0e5;
+      margin: 4px 0;
+    }
+    .warning {
+      color: #ff3b30;
+      font-size: 14px;
+    }
+    @media (max-width: 400px) {
+      .segment-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <h1>
+      <span>✂️</span> Audio Cutter
+    </h1>
+
+    <div class="audio-selector">
+      <span class="file-label">🎵 Select Audio File</span>
+      <input type="file" id="audioFileInput" accept="audio/*">
+      <div id="audioInfo" style="font-size:14px; color:#48484a;"></div>
+    </div>
+
+    <div class="section-control">
+      <label for="numSections">🔢 Sections</label>
+      <input type="number" id="numSections" min="1" max="20" value="2" step="1">
+      <button id="generateRowsBtn" style="padding:10px 16px;">Generate</button>
+    </div>
+
+    <div id="timeInputsContainer" class="time-inputs-container">
+      <!-- dynamic segment rows will be inserted here -->
+    </div>
+
+    <div style="display: flex; gap: 12px; justify-content: center;">
+      <button id="cutAudioBtn" style="flex:1;">✂️ Cut Audio</button>
+    </div>
+
+    <div class="download-section" id="downloadSection" style="display: none;">
+      <button id="downloadAllBtn" class="download-btn" style="width:100%;">⬇️ Download All Segments (ZIP)</button>
+      <div id="individualDownloads" style="display: flex; flex-direction: column; gap: 8px;"></div>
+    </div>
+    <div id="statusMessage" class="status-message"></div>
+    <div style="font-size:13px; color:#8e8e93; text-align:center; margin-top:4px;">
+      Enter start/end times in seconds (e.g., 0.0 - 10.5)
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // DOM Elements
+      const audioFileInput = document.getElementById('audioFileInput');
+      const audioInfo = document.getElementById('audioInfo');
+      const numSectionsInput = document.getElementById('numSections');
+      const generateRowsBtn = document.getElementById('generateRowsBtn');
+      const timeInputsContainer = document.getElementById('timeInputsContainer');
+      const cutAudioBtn = document.getElementById('cutAudioBtn');
+      const downloadSection = document.getElementById('downloadSection');
+      const downloadAllBtn = document.getElementById('downloadAllBtn');
+      const individualDownloads = document.getElementById('individualDownloads');
+      const statusMessage = document.getElementById('statusMessage');
+
+      // State
+      let audioBuffer = null;
+      let audioContext = null;
+      let originalFileName = 'audio';
+      let generatedSegments = []; // Array of { blob, filename, start, end }
+
+      // Utility: format time
+      const formatTime = (seconds) => {
+        if (isNaN(seconds)) return '--';
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs.toString().padStart(2,'0')}`;
+      };
+
+      // Reset state when new file selected
+      audioFileInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) {
+          audioBuffer = null;
+          audioInfo.textContent = '';
+          return;
+        }
+
+        originalFileName = file.name.replace(/\.[^/.]+$/, "") || 'audio';
+        statusMessage.textContent = 'Loading audio...';
+        
+        try {
+          const arrayBuffer = await file.arrayBuffer();
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+          const duration = audioBuffer.duration;
+          audioInfo.innerHTML = `✅ ${file.name} · Duration: <strong>${formatTime(duration)}</strong> (${duration.toFixed(2)}s)`;
+          statusMessage.textContent = 'Audio loaded. Set sections and times.';
+          // Clear previous segments
+          generatedSegments = [];
+          downloadSection.style.display = 'none';
+          individualDownloads.innerHTML = '';
+        } catch (err) {
+          statusMessage.textContent = 'Error loading audio: ' + err.message;
+          audioBuffer = null;
+          audioInfo.textContent = 'Failed to load audio.';
+        }
+      });
+
+      // Generate time input rows based on number of sections
+      function generateTimeRows() {
+        const count = parseInt(numSectionsInput.value, 10);
+        if (isNaN(count) || count < 1) {
+          timeInputsContainer.innerHTML = '<p style="color:#ff3b30;">Please enter a valid number (min 1).</p>';
+          return;
+        }
+        if (count > 20) {
+          timeInputsContainer.innerHTML = '<p style="color:#ff3b30;">Maximum 20 sections allowed for convenience.</p>';
+          return;
+        }
+
+        let html = '';
+        for (let i = 0; i < count; i++) {
+          html += `
+            <div class="segment-row" data-index="${i}">
+              <span class="segment-label">Segment ${i+1}</span>
+              <div class="time-group">
+                <span>Start</span>
+                <input type="number" class="start-time" placeholder="0.0" step="any" min="0" value="${i===0 ? '0.0' : ''}">
+                <span>s</span>
+              </div>
+              <div class="time-group">
+                <span>End</span>
+                <input type="number" class="end-time" placeholder="0.0" step="any" min="0" value="">
+                <span>s</span>
+              </div>
+            </div>
+          `;
+        }
+        timeInputsContainer.innerHTML = html;
+        // Clear any previous download UI
+        generatedSegments = [];
+        downloadSection.style.display = 'none';
+        individualDownloads.innerHTML = '';
+      }
+
+      generateRowsBtn.addEventListener('click', generateTimeRows);
+
+      // Initial generation on page load
+      window.addEventListener('load', () => {
+        generateTimeRows();
+      });
+
+      // Collect segment definitions from inputs
+      function getSegmentDefinitions() {
+        const rows = document.querySelectorAll('.segment-row');
+        const definitions = [];
+        for (let row of rows) {
+          const startInput = row.querySelector('.start-time');
+          const endInput = row.querySelector('.end-time');
+          const startVal = parseFloat(startInput.value);
+          const endVal = parseFloat(endInput.value);
+          
+          if (isNaN(startVal) || isNaN(endVal)) {
+            throw new Error(`Segment ${definitions.length+1}: Please enter valid start and end times.`);
+          }
+          if (startVal < 0 || endVal < 0) {
+            throw new Error(`Segment ${definitions.length+1}: Times cannot be negative.`);
+          }
+          if (startVal >= endVal) {
+            throw new Error(`Segment ${definitions.length+1}: Start time must be less than end time.`);
+          }
+          if (audioBuffer && endVal > audioBuffer.duration) {
+            throw new Error(`Segment ${definitions.length+1}: End time exceeds audio duration (${audioBuffer.duration.toFixed(2)}s).`);
+          }
+          definitions.push({ start: startVal, end: endVal });
+        }
+        if (definitions.length === 0) throw new Error('No segments defined.');
+        return definitions;
+      }
+
+      // Cut audio into segments based on definitions
+      async function cutAudioSegments(definitions) {
+        if (!audioBuffer) throw new Error('No audio file loaded.');
+        
+        const sampleRate = audioBuffer.sampleRate;
+        const numberOfChannels = audioBuffer.numberOfChannels;
+        const segments = [];
+
+        for (let i = 0; i < definitions.length; i++) {
+          const { start, end } = definitions[i];
+          const startSample = Math.floor(start * sampleRate);
+          const endSample = Math.min(Math.floor(end * sampleRate), audioBuffer.length);
+          const frameCount = endSample - startSample;
+          
+          if (frameCount <= 0) {
+            throw new Error(`Segment ${i+1}: invalid length (0 samples).`);
+          }
+
+          // Create offline context for rendering segment
+          const offlineCtx = new OfflineAudioContext(numberOfChannels, frameCount, sampleRate);
+          const bufferSource = offlineCtx.createBufferSource();
+          bufferSource.buffer = audioBuffer;
+          
+          // Connect to destination
+          bufferSource.connect(offlineCtx.destination);
+          bufferSource.start(0, start, end - start);
+          
+          const renderedBuffer = await offlineCtx.startRendering();
+          
+          // Convert AudioBuffer to WAV blob
+          const wavBlob = audioBufferToWav(renderedBuffer);
+          const filename = `${originalFileName}_segment_${i+1}.wav`;
+          segments.push({
+            blob: wavBlob,
+            filename: filename,
+            start,
+            end
+          });
+        }
+        return segments;
+      }
+
+      // Convert AudioBuffer to WAV Blob (standard PCM)
+      function audioBufferToWav(buffer) {
+        const numChannels = buffer.numberOfChannels;
+        const sampleRate = buffer.sampleRate;
+        const format = 1; // PCM
+        const bitDepth = 16;
+        
+        const bytesPerSample = bitDepth / 8;
+        const blockAlign = numChannels * bytesPerSample;
+        
+        const samples = [];
+        for (let channel = 0; channel < numChannels; channel++) {
+          samples.push(buffer.getChannelData(channel));
+        }
+        
+        const length = samples[0].length;
+        const bufferLength = length * numChannels * bytesPerSample;
+        const headerLength = 44;
+        const totalLength = headerLength + bufferLength;
+        
+        const arrayBuffer = new ArrayBuffer(totalLength);
+        const view = new DataView(arrayBuffer);
+        
+        // RIFF header
+        writeString(view, 0, 'RIFF');
+        view.setUint32(4, totalLength - 8, true);
+        writeString(view, 8, 'WAVE');
+        
+        // fmt subchunk
+        writeString(view, 12, 'fmt ');
+        view.setUint32(16, 16, true);
+        view.setUint16(20, format, true);
+        view.setUint16(22, numChannels, true);
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, sampleRate * blockAlign, true);
+        view.setUint16(32, blockAlign, true);
+        view.setUint16(34, bitDepth, true);
+        
+        // data subchunk
+        writeString(view, 36, 'data');
+        view.setUint32(40, bufferLength, true);
+        
+        let offset = 44;
+        for (let i = 0; i < length; i++) {
+          for (let channel = 0; channel < numChannels; channel++) {
+            let sample = samples[channel][i];
+            sample = Math.max(-1, Math.min(1, sample));
+            sample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+            view.setInt16(offset, sample, true);
+            offset += 2;
+          }
+        }
+        
+        return new Blob([arrayBuffer], { type: 'audio/wav' });
+      }
+
+      function writeString(view, offset, string) {
+        for (let i = 0; i < string.length; i++) {
+          view.setUint8(offset + i, string.charCodeAt(i));
+        }
+      }
+
+      // Handle Cut button
+      cutAudioBtn.addEventListener('click', async () => {
+        statusMessage.textContent = '';
+        generatedSegments = [];
+        downloadSection.style.display = 'none';
+        individualDownloads.innerHTML = '';
+
+        if (!audioBuffer) {
+          statusMessage.textContent = '⚠️ Please load an audio file first.';
+          return;
+        }
+
+        let definitions;
+        try {
+          definitions = getSegmentDefinitions();
+        } catch (e) {
+          statusMessage.textContent = '❌ ' + e.message;
+          return;
+        }
+
+        cutAudioBtn.disabled = true;
+        statusMessage.textContent = '✂️ Cutting audio segments...';
+
+        try {
+          const segments = await cutAudioSegments(definitions);
+          generatedSegments = segments;
+          
+          // Show download section
+          downloadSection.style.display = 'flex';
+          renderIndividualDownloads(segments);
+          statusMessage.textContent = `✅ ${segments.length} segment(s) created. Download individually or as ZIP.`;
+        } catch (err) {
+          statusMessage.textContent = '❌ Error: ' + err.message;
+          console.error(err);
+        } finally {
+          cutAudioBtn.disabled = false;
+        }
+      });
+
+      // Render individual download buttons
+      function renderIndividualDownloads(segments) {
+        individualDownloads.innerHTML = '';
+        segments.forEach((seg, idx) => {
+          const btn = document.createElement('button');
+          btn.className = 'download-btn';
+          btn.style.marginBottom = '6px';
+          btn.innerHTML = `⬇️ Download Segment ${idx+1} (${seg.start.toFixed(2)}s - ${seg.end.toFixed(2)}s)`;
+          btn.addEventListener('click', () => {
+            downloadBlob(seg.blob, seg.filename);
+          });
+          individualDownloads.appendChild(btn);
+        });
+      }
+
+      // Download blob as file
+      function downloadBlob(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      // Download all as ZIP using JSZip (loaded via CDN)
+      downloadAllBtn.addEventListener('click', async () => {
+        if (generatedSegments.length === 0) {
+          statusMessage.textContent = 'No segments to download.';
+          return;
+        }
+
+        // Dynamically load JSZip if not already loaded
+        if (typeof JSZip === 'undefined') {
+          statusMessage.textContent = 'Loading ZIP library...';
+          await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+        }
+
+        try {
+          const zip = new JSZip();
+          generatedSegments.forEach(seg => {
+            zip.file(seg.filename, seg.blob);
+          });
+          const zipBlob = await zip.generateAsync({ type: 'blob' });
+          downloadBlob(zipBlob, `${originalFileName}_segments.zip`);
+          statusMessage.textContent = '⬇️ ZIP download started.';
+        } catch (err) {
+          statusMessage.textContent = 'ZIP creation failed: ' + err.message;
+        }
+      });
+
+      function loadScript(src) {
+        return new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = src;
+          script.onload = resolve;
+          script.onerror = () => reject(new Error('Failed to load script'));
+          document.head.appendChild(script);
+        });
+      }
+
+      // Preload JSZip for convenience (optional)
+      if (typeof JSZip === 'undefined') {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+        script.async = true;
+        document.head.appendChild(script);
+      }
+
+      // Reset button states if needed
+    })();
+  </script>
+</body>
+</html>
