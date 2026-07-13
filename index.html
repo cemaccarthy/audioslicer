@@ -1,710 +1,358 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-GB">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Audio Cutter">
-  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✂️</text></svg>">
-  <title>Audio Cutter ✂️</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      background: #f5f5f7;
-      color: #1d1d1f;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      min-height: 100vh;
-      padding: 16px;
-      margin: 0;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .app-container {
-      width: 100%;
-      max-width: 500px;
-      background: #ffffff;
-      border-radius: 36px;
-      padding: 20px 20px 30px;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.08);
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-      margin-top: 10px;
-      border: 1px solid rgba(0,0,0,0.04);
-    }
-    h1 {
-      font-size: 28px;
-      font-weight: 600;
-      text-align: center;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      color: #000;
-    }
-    .audio-selector {
-      background: #f2f2f7;
-      border-radius: 24px;
-      padding: 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .file-label {
-      font-weight: 500;
-      font-size: 16px;
-      color: #3a3a3c;
-    }
-    .file-input-wrapper {
-      position: relative;
-      width: 100%;
-    }
-    input[type="file"] {
-      display: block;
-      width: 100%;
-      font-size: 15px;
-      padding: 12px 0;
-      color: #1d1d1f;
-    }
-    input[type="file"]::file-selector-button {
-      background: #007aff;
-      color: white;
-      border: none;
-      border-radius: 20px;
-      padding: 10px 20px;
-      font-size: 15px;
-      font-weight: 500;
-      margin-right: 12px;
-      cursor: pointer;
-    }
-    .supported-formats {
-      font-size: 13px;
-      color: #8e8e93;
-      margin-top: 4px;
-    }
-    .section-control {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      background: #f2f2f7;
-      border-radius: 20px;
-      padding: 12px 18px;
-    }
-    .section-control label {
-      font-weight: 500;
-      font-size: 16px;
-    }
-    .section-control input {
-      width: 70px;
-      padding: 10px 12px;
-      border-radius: 16px;
-      border: 1px solid #dcdcde;
-      background: white;
-      font-size: 16px;
-      text-align: center;
-      outline: none;
-    }
-    button {
-      background: #007aff;
-      color: white;
-      border: none;
-      border-radius: 24px;
-      padding: 14px 20px;
-      font-size: 17px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      letter-spacing: -0.2px;
-    }
-    button:active {
-      background: #005bbf;
-    }
-    button:disabled {
-      background: #aac7f0;
-      cursor: not-allowed;
-    }
-    .time-inputs-container {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      margin-top: 4px;
-    }
-    .segment-row {
-      background: #f9f9fb;
-      border-radius: 22px;
-      padding: 14px 16px;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 10px;
-      border: 1px solid #e5e5ea;
-    }
-    .segment-label {
-      font-weight: 600;
-      font-size: 15px;
-      min-width: 70px;
-      color: #1c1c1e;
-    }
-    .time-group {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
-      flex: 1;
-    }
-    .time-group input {
-      width: 70px;
-      padding: 10px 8px;
-      border-radius: 14px;
-      border: 1px solid #d1d1d6;
-      font-size: 15px;
-      text-align: center;
-      background: white;
-    }
-    .time-group span {
-      font-size: 14px;
-      color: #6c6c70;
-    }
-    .download-section {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-top: 8px;
-    }
-    .download-btn {
-      background: #34c759;
-    }
-    .download-btn:active {
-      background: #2da84a;
-    }
-    .status-message {
-      font-size: 15px;
-      color: #8e8e93;
-      text-align: center;
-      padding: 6px;
-      min-height: 24px;
-    }
-    hr {
-      border: 0.5px solid #e0e0e5;
-      margin: 4px 0;
-    }
-    .error-message {
-      color: #ff3b30;
-      font-size: 14px;
-    }
-    @media (max-width: 400px) {
-      .segment-row {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#ffffff">
+    <title>Sound Scissors</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        :root {
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --border-radius: 12px;
+            --color-bg: #ffffff;
+            --color-text: #1d1d1f;
+            --color-border: #d2d2d7;
+            --color-accent: #0071e3;
+            --color-danger: #ff3b30;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            margin: 0;
+            padding: env(safe-area-inset-top) var(--spacing-md) env(safe-area-inset-bottom);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.5;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin: var(--spacing-lg) 0 var(--spacing-md);
+            letter-spacing: -0.5px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #86868b;
+            margin-bottom: var(--spacing-sm);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: var(--spacing-md);
+            border: 2px dashed var(--color-border);
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            margin-bottom: var(--spacing-lg);
+            background: #fafafa;
+        }
+
+        .section-count-wrapper {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        input[type="number"], input[type="text"] {
+            width: 100%;
+            padding: var(--spacing-md);
+            border: 1px solid var(--color-border);
+            border-radius: var(--border-radius);
+            font-size: 17px;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+
+        .sections-container {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .section-row {
+            display: grid;
+            grid-template-columns: 40px 1fr 1fr 40px;
+            gap: var(--spacing-sm);
+            align-items: center;
+            padding: var(--spacing-md);
+            background: #fafafa;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--color-border);
+        }
+
+        .section-label {
+            font-weight: 700;
+            font-size: 15px;
+            color: var(--color-accent);
+        }
+
+        .time-input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .time-input-group label {
+            font-size: 10px;
+            margin-bottom: 4px;
+        }
+
+        .remove-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: var(--color-danger);
+            color: white;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.9;
+        }
+
+        .remove-btn:disabled {
+            background: var(--color-border);
+            cursor: not-allowed;
+        }
+
+        button.primary {
+            width: 100%;
+            padding: var(--spacing-md);
+            background: var(--color-accent);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: var(--spacing-sm);
+        }
+
+        button.primary:disabled {
+            background: var(--color-border);
+        }
+
+        .status {
+            margin-top: var(--spacing-md);
+            font-size: 14px;
+            text-align: center;
+            min-height: 21px;
+        }
+
+        /* Hide number input spinners for cleaner iOS look */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+    </style>
 </head>
 <body>
-  <div class="app-container">
-    <h1>
-      <span>✂️</span> Audio Cutter
-    </h1>
+    <h1>Sound Scissors</h1>
 
-    <div class="audio-selector">
-      <span class="file-label">🎵 Select Audio File</span>
-      <div class="file-input-wrapper">
-        <input type="file" id="audioFileInput" accept="audio/mp3,audio/wav,audio/wave,audio/x-wav,audio/flac,audio/x-flac,.mp3,.wav,.flac">
-      </div>
-      <div class="supported-formats">✅ Supported: MP3, WAV, FLAC</div>
-      <div id="audioInfo" style="font-size:14px; color:#48484a; margin-top:4px;"></div>
+    <label for="audioFile">Source Audio File</label>
+    <input type="file" id="audioFile" accept=".mp3,.wav,.aiff,.flac,.m4a,.aac">
+
+    <div class="section-count-wrapper">
+        <label for="sectionCount">Number of Sections</label>
+        <input type="number" id="sectionCount" min="1" max="20" value="1" inputmode="numeric">
     </div>
 
-    <div class="section-control">
-      <label for="numSections">🔢 Sections</label>
-      <input type="number" id="numSections" min="1" max="20" value="2" step="1">
-      <button id="generateRowsBtn" style="padding:10px 16px;">Generate</button>
-    </div>
+    <div id="sectionsContainer" class="sections-container"></div>
 
-    <div id="timeInputsContainer" class="time-inputs-container">
-      <!-- dynamic segment rows inserted here -->
-    </div>
+    <button id="processBtn" class="primary" disabled>Save Sections</button>
+    <div id="status" class="status"></div>
 
-    <div style="display: flex; gap: 12px; justify-content: center;">
-      <button id="cutAudioBtn" style="flex:1;">✂️ Cut Audio</button>
-    </div>
+    <script>
+        const fileInput = document.getElementById('audioFile');
+        const sectionCountInput = document.getElementById('sectionCount');
+        const sectionsContainer = document.getElementById('sectionsContainer');
+        const processBtn = document.getElementById('processBtn');
+        const statusEl = document.getElementById('status');
 
-    <div class="download-section" id="downloadSection" style="display: none;">
-      <button id="downloadAllBtn" class="download-btn" style="width:100%;">⬇️ Download All Segments (ZIP)</button>
-      <div id="individualDownloads" style="display: flex; flex-direction: column; gap: 8px;"></div>
-    </div>
-    <div id="statusMessage" class="status-message"></div>
-    <div style="font-size:13px; color:#8e8e93; text-align:center; margin-top:4px;">
-      Enter start/end times in seconds (e.g., 0.0 - 10.5)
-    </div>
-  </div>
+        let audioContext = null;
+        let sourceBuffer = null;
 
-  <!-- FLAC decoder library for browsers that don't natively support FLAC -->
-  <script src="https://cdn.jsdelivr.net/npm/libflacjs@5.0.0/dist/libflac.min.js"></script>
-  
-  <script>
-    (function() {
-      // DOM Elements
-      const audioFileInput = document.getElementById('audioFileInput');
-      const audioInfo = document.getElementById('audioInfo');
-      const numSectionsInput = document.getElementById('numSections');
-      const generateRowsBtn = document.getElementById('generateRowsBtn');
-      const timeInputsContainer = document.getElementById('timeInputsContainer');
-      const cutAudioBtn = document.getElementById('cutAudioBtn');
-      const downloadSection = document.getElementById('downloadSection');
-      const downloadAllBtn = document.getElementById('downloadAllBtn');
-      const individualDownloads = document.getElementById('individualDownloads');
-      const statusMessage = document.getElementById('statusMessage');
-
-      // State
-      let audioBuffer = null;
-      let audioContext = null;
-      let originalFileName = 'audio';
-      let generatedSegments = [];
-      let flacDecoderReady = false;
-
-      // Initialize FLAC decoder
-      function initFlacDecoder() {
-        return new Promise((resolve) => {
-          if (typeof Flac === 'undefined') {
-            // Library not loaded, will fall back to browser native decoding
-            flacDecoderReady = false;
-            resolve();
-            return;
-          }
-          Flac.ready.then(() => {
-            flacDecoderReady = true;
-            resolve();
-          }).catch(() => {
-            flacDecoderReady = false;
-            resolve();
-          });
-        });
-      }
-
-      // Decode FLAC manually using libflac.js
-      async function decodeFlacManually(arrayBuffer) {
-        if (!flacDecoderReady || typeof Flac === 'undefined') {
-          throw new Error('FLAC decoder not available');
-        }
-
-        const flac = Flac.create();
-        
-        return new Promise((resolve, reject) => {
-          const audioData = [];
-          
-          flac.on('data', (samples) => {
-            audioData.push(samples);
-          });
-          
-          flac.on('end', () => {
-            // Combine all audio data
-            const totalLength = audioData.reduce((sum, chunk) => sum + chunk.length, 0);
-            const combinedAudio = new Float32Array(totalLength);
-            let offset = 0;
-            for (const chunk of audioData) {
-              combinedAudio.set(chunk, offset);
-              offset += chunk.length;
-            }
+        // Generate section inputs dynamically
+        function renderSections(count) {
+            sectionsContainer.innerHTML = '';
+            const safeCount = Math.max(1, Math.min(20, parseInt(count) || 1));
             
-            // Create AudioBuffer
-            const sampleRate = flac.sampleRate || 44100;
-            const channels = flac.channels || 2;
-            const audioBuffer = audioContext.createBuffer(channels, combinedAudio.length / channels, sampleRate);
-            
-            // De-interleave and copy to buffer
-            for (let channel = 0; channel < channels; channel++) {
-              const channelData = audioBuffer.getChannelData(channel);
-              for (let i = 0; i < channelData.length; i++) {
-                channelData[i] = combinedAudio[i * channels + channel];
-              }
+            for (let i = 0; i < safeCount; i++) {
+                const row = document.createElement('div');
+                row.className = 'section-row';
+                row.innerHTML = `
+                    <span class="section-label">${i + 1}</span>
+                    <div class="time-input-group">
+                        <label>Start (sec)</label>
+                        <input type="number" step="0.01" min="0" placeholder="0.00" class="start-time" inputmode="decimal">
+                    </div>
+                    <div class="time-input-group">
+                        <label>End (sec)</label>
+                        <input type="number" step="0.01" min="0" placeholder="0.00" class="end-time" inputmode="decimal">
+                    </div>
+                    <button class="remove-btn" aria-label="Remove section" ${safeCount <= 1 ? 'disabled' : ''}>×</button>
+                `;
+                
+                row.querySelector('.remove-btn').addEventListener('click', () => {
+                    if (sectionsContainer.children.length > 1) {
+                        row.remove();
+                        sectionCountInput.value = sectionsContainer.children.length;
+                        updateRemoveButtons();
+                    }
+                });
+                
+                sectionsContainer.appendChild(row);
             }
-            
-            flac.destroy();
-            resolve(audioBuffer);
-          });
-          
-          flac.on('error', (error) => {
-            flac.destroy();
-            reject(new Error('FLAC decoding error: ' + error));
-          });
-          
-          // Feed the FLAC data
-          const uint8Array = new Uint8Array(arrayBuffer);
-          flac.write(uint8Array);
-          flac.end();
-        });
-      }
-
-      // Utility: format time
-      const formatTime = (seconds) => {
-        if (isNaN(seconds)) return '--';
-        const mins = Math.floor(seconds / 60);
-        const secs = Math.floor(seconds % 60);
-        return `${mins}:${secs.toString().padStart(2,'0')}`;
-      };
-
-      // Check if file type is supported
-      function isSupportedFileType(file) {
-        const supportedTypes = [
-          'audio/mpeg', 'audio/mp3',
-          'audio/wav', 'audio/wave', 'audio/x-wav',
-          'audio/flac', 'audio/x-flac'
-        ];
-        const supportedExtensions = ['.mp3', '.wav', '.flac'];
-        
-        if (supportedTypes.includes(file.type)) return true;
-        
-        const fileName = file.name.toLowerCase();
-        return supportedExtensions.some(ext => fileName.endsWith(ext));
-      }
-
-      // Handle file selection
-      audioFileInput.addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if (!file) {
-          audioBuffer = null;
-          audioInfo.textContent = '';
-          return;
+            updateRemoveButtons();
         }
 
-        // Validate file type
-        if (!isSupportedFileType(file)) {
-          statusMessage.textContent = '❌ Unsupported format. Please select MP3, WAV, or FLAC.';
-          audioInfo.textContent = 'Invalid file type.';
-          audioBuffer = null;
-          audioFileInput.value = ''; // Reset input
-          return;
+        function updateRemoveButtons() {
+            const btns = sectionsContainer.querySelectorAll('.remove-btn');
+            btns.forEach(btn => btn.disabled = sectionsContainer.children.length <= 1);
         }
 
-        originalFileName = file.name.replace(/\.[^/.]+$/, "") || 'audio';
-        const fileExtension = file.name.split('.').pop().toLowerCase();
-        statusMessage.textContent = 'Loading audio...';
+        sectionCountInput.addEventListener('change', () => renderSections(sectionCountInput.value));
         
-        try {
-          const arrayBuffer = await file.arrayBuffer();
-          audioContext = new (window.AudioContext || window.webkitAudioContext)();
-          
-          // Try native decoding first (works for MP3 and WAV)
-          try {
-            audioBuffer = await audioContext.decodeAudioData(arrayBuffer.slice(0));
-          } catch (nativeError) {
-            // If native decoding fails and it's a FLAC file, try manual decoding
-            if (fileExtension === 'flac') {
-              statusMessage.textContent = 'Decoding FLAC...';
-              audioBuffer = await decodeFlacManually(arrayBuffer);
-            } else {
-              throw nativeError;
+        // Initialize with one section
+        renderSections(1);
+
+        // Load audio file into buffer
+        fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            statusEl.textContent = 'Loading audio...';
+            processBtn.disabled = true;
+
+            try {
+                if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const arrayBuffer = await file.arrayBuffer();
+                sourceBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                statusEl.textContent = `Loaded: ${file.name} (${sourceBuffer.duration.toFixed(2)}s)`;
+                processBtn.disabled = false;
+            } catch (err) {
+                statusEl.textContent = 'Error loading audio file.';
+                console.error(err);
             }
-          }
-          
-          const duration = audioBuffer.duration;
-          audioInfo.innerHTML = `✅ ${file.name} · Duration: <strong>${formatTime(duration)}</strong> (${duration.toFixed(2)}s)`;
-          statusMessage.textContent = 'Audio loaded. Set sections and times.';
-          
-          // Clear previous segments
-          generatedSegments = [];
-          downloadSection.style.display = 'none';
-          individualDownloads.innerHTML = '';
-        } catch (err) {
-          statusMessage.textContent = 'Error loading audio: ' + err.message;
-          audioBuffer = null;
-          audioInfo.textContent = 'Failed to decode audio. Try a different file.';
-          console.error('Audio decoding error:', err);
-        }
-      });
-
-      // Generate time input rows
-      function generateTimeRows() {
-        const count = parseInt(numSectionsInput.value, 10);
-        if (isNaN(count) || count < 1) {
-          timeInputsContainer.innerHTML = '<p class="error-message">Please enter a valid number (min 1).</p>';
-          return;
-        }
-        if (count > 20) {
-          timeInputsContainer.innerHTML = '<p class="error-message">Maximum 20 sections allowed.</p>';
-          return;
-        }
-
-        let html = '';
-        for (let i = 0; i < count; i++) {
-          html += `
-            <div class="segment-row" data-index="${i}">
-              <span class="segment-label">Segment ${i+1}</span>
-              <div class="time-group">
-                <span>Start</span>
-                <input type="number" class="start-time" placeholder="0.0" step="any" min="0" value="${i===0 ? '0.0' : ''}">
-                <span>s</span>
-              </div>
-              <div class="time-group">
-                <span>End</span>
-                <input type="number" class="end-time" placeholder="0.0" step="any" min="0" value="">
-                <span>s</span>
-              </div>
-            </div>
-          `;
-        }
-        timeInputsContainer.innerHTML = html;
-        generatedSegments = [];
-        downloadSection.style.display = 'none';
-        individualDownloads.innerHTML = '';
-      }
-
-      generateRowsBtn.addEventListener('click', generateTimeRows);
-
-      // Initial generation
-      window.addEventListener('load', () => {
-        initFlacDecoder().then(() => {
-          generateTimeRows();
         });
-      });
 
-      // Collect segment definitions
-      function getSegmentDefinitions() {
-        const rows = document.querySelectorAll('.segment-row');
-        const definitions = [];
-        for (let row of rows) {
-          const startInput = row.querySelector('.start-time');
-          const endInput = row.querySelector('.end-time');
-          const startVal = parseFloat(startInput.value);
-          const endVal = parseFloat(endInput.value);
-          
-          if (isNaN(startVal) || isNaN(endVal)) {
-            throw new Error(`Segment ${definitions.length+1}: Please enter valid start and end times.`);
-          }
-          if (startVal < 0 || endVal < 0) {
-            throw new Error(`Segment ${definitions.length+1}: Times cannot be negative.`);
-          }
-          if (startVal >= endVal) {
-            throw new Error(`Segment ${definitions.length+1}: Start time must be less than end time.`);
-          }
-          if (audioBuffer && endVal > audioBuffer.duration) {
-            throw new Error(`Segment ${definitions.length+1}: End time exceeds audio duration (${audioBuffer.duration.toFixed(2)}s).`);
-          }
-          definitions.push({ start: startVal, end: endVal });
-        }
-        if (definitions.length === 0) throw new Error('No segments defined.');
-        return definitions;
-      }
+        // Process and export sections
+        processBtn.addEventListener('click', async () => {
+            if (!sourceBuffer) return;
 
-      // Cut audio segments
-      async function cutAudioSegments(definitions) {
-        if (!audioBuffer) throw new Error('No audio file loaded.');
-        
-        const sampleRate = audioBuffer.sampleRate;
-        const numberOfChannels = audioBuffer.numberOfChannels;
-        const segments = [];
+            const rows = sectionsContainer.querySelectorAll('.section-row');
+            statusEl.textContent = 'Processing sections...';
+            processBtn.disabled = true;
 
-        for (let i = 0; i < definitions.length; i++) {
-          const { start, end } = definitions[i];
-          const startSample = Math.floor(start * sampleRate);
-          const endSample = Math.min(Math.floor(end * sampleRate), audioBuffer.length);
-          const frameCount = endSample - startSample;
-          
-          if (frameCount <= 0) {
-            throw new Error(`Segment ${i+1}: invalid length (0 samples).`);
-          }
+            for (let i = 0; i < rows.length; i++) {
+                const start = parseFloat(rows[i].querySelector('.start-time').value) || 0;
+                const end = parseFloat(rows[i].querySelector('.end-time').value) || sourceBuffer.duration;
+                
+                if (end <= start) {
+                    statusEl.textContent = `Section ${i + 1}: End time must be after start time.`;
+                    processBtn.disabled = false;
+                    return;
+                }
 
-          const offlineCtx = new OfflineAudioContext(numberOfChannels, frameCount, sampleRate);
-          const bufferSource = offlineCtx.createBufferSource();
-          bufferSource.buffer = audioBuffer;
-          
-          bufferSource.connect(offlineCtx.destination);
-          bufferSource.start(0, start, end - start);
-          
-          const renderedBuffer = await offlineCtx.startRendering();
-          
-          const wavBlob = audioBufferToWav(renderedBuffer);
-          const filename = `${originalFileName}_segment_${i+1}.wav`;
-          segments.push({
-            blob: wavBlob,
-            filename: filename,
-            start,
-            end
-          });
-        }
-        return segments;
-      }
+                const startSample = Math.floor(start * sourceBuffer.sampleRate);
+                const endSample = Math.floor(Math.min(end, sourceBuffer.duration) * sourceBuffer.sampleRate);
+                const frameCount = endSample - startSample;
 
-      // Convert AudioBuffer to WAV Blob
-      function audioBufferToWav(buffer) {
-        const numChannels = buffer.numberOfChannels;
-        const sampleRate = buffer.sampleRate;
-        const format = 1;
-        const bitDepth = 16;
-        
-        const bytesPerSample = bitDepth / 8;
-        const blockAlign = numChannels * bytesPerSample;
-        
-        const samples = [];
-        for (let channel = 0; channel < numChannels; channel++) {
-          samples.push(buffer.getChannelData(channel));
-        }
-        
-        const length = samples[0].length;
-        const bufferLength = length * numChannels * bytesPerSample;
-        const headerLength = 44;
-        const totalLength = headerLength + bufferLength;
-        
-        const arrayBuffer = new ArrayBuffer(totalLength);
-        const view = new DataView(arrayBuffer);
-        
-        writeString(view, 0, 'RIFF');
-        view.setUint32(4, totalLength - 8, true);
-        writeString(view, 8, 'WAVE');
-        
-        writeString(view, 12, 'fmt ');
-        view.setUint32(16, 16, true);
-        view.setUint16(20, format, true);
-        view.setUint16(22, numChannels, true);
-        view.setUint32(24, sampleRate, true);
-        view.setUint32(28, sampleRate * blockAlign, true);
-        view.setUint16(32, blockAlign, true);
-        view.setUint16(34, bitDepth, true);
-        
-        writeString(view, 36, 'data');
-        view.setUint32(40, bufferLength, true);
-        
-        let offset = 44;
-        for (let i = 0; i < length; i++) {
-          for (let channel = 0; channel < numChannels; channel++) {
-            let sample = samples[channel][i];
-            sample = Math.max(-1, Math.min(1, sample));
-            sample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
-            view.setInt16(offset, sample, true);
-            offset += 2;
-          }
-        }
-        
-        return new Blob([arrayBuffer], { type: 'audio/wav' });
-      }
+                // Create new buffer for this section
+                const newBuffer = audioContext.createBuffer(
+                    sourceBuffer.numberOfChannels,
+                    frameCount,
+                    sourceBuffer.sampleRate
+                );
 
-      function writeString(view, offset, string) {
-        for (let i = 0; i < string.length; i++) {
-          view.setUint8(offset + i, string.charCodeAt(i));
-        }
-      }
+                for (let ch = 0; ch < sourceBuffer.numberOfChannels; ch++) {
+                    const sourceData = sourceBuffer.getChannelData(ch);
+                    const newData = newBuffer.getChannelData(ch);
+                    for (let s = 0; s < frameCount; s++) {
+                        newData[s] = sourceData[startSample + s];
+                    }
+                }
 
-      // Cut button handler
-      cutAudioBtn.addEventListener('click', async () => {
-        statusMessage.textContent = '';
-        generatedSegments = [];
-        downloadSection.style.display = 'none';
-        individualDownloads.innerHTML = '';
+                // Convert to WAV and trigger download
+                const wavBlob = bufferToWav(newBuffer);
+                const url = URL.createObjectURL(wavBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `section_${i + 1}_${start.toFixed(2)}s-${end.toFixed(2)}s.wav`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                // Small delay between downloads for iOS Safari compatibility
+                await new Promise(r => setTimeout(r, 500));
+            }
 
-        if (!audioBuffer) {
-          statusMessage.textContent = '⚠️ Please load an audio file first.';
-          return;
-        }
-
-        let definitions;
-        try {
-          definitions = getSegmentDefinitions();
-        } catch (e) {
-          statusMessage.textContent = '❌ ' + e.message;
-          return;
-        }
-
-        cutAudioBtn.disabled = true;
-        statusMessage.textContent = '✂️ Cutting audio segments...';
-
-        try {
-          const segments = await cutAudioSegments(definitions);
-          generatedSegments = segments;
-          
-          downloadSection.style.display = 'flex';
-          renderIndividualDownloads(segments);
-          statusMessage.textContent = `✅ ${segments.length} segment(s) created. Download individually or as ZIP.`;
-        } catch (err) {
-          statusMessage.textContent = '❌ Error: ' + err.message;
-          console.error(err);
-        } finally {
-          cutAudioBtn.disabled = false;
-        }
-      });
-
-      // Render individual download buttons
-      function renderIndividualDownloads(segments) {
-        individualDownloads.innerHTML = '';
-        segments.forEach((seg, idx) => {
-          const btn = document.createElement('button');
-          btn.className = 'download-btn';
-          btn.style.marginBottom = '6px';
-          btn.innerHTML = `⬇️ Download Segment ${idx+1} (${seg.start.toFixed(2)}s - ${seg.end.toFixed(2)}s)`;
-          btn.addEventListener('click', () => {
-            downloadBlob(seg.blob, seg.filename);
-          });
-          individualDownloads.appendChild(btn);
+            statusEl.textContent = 'All sections saved.';
+            processBtn.disabled = false;
         });
-      }
 
-      // Download helper
-      function downloadBlob(blob, filename) {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }
+        // Minimal WAV encoder
+        function bufferToWav(buffer) {
+            const numCh = buffer.numberOfChannels;
+            const sampleRate = buffer.sampleRate;
+            const format = 1; // PCM
+            const bitsPerSample = 16;
+            const bytesPerSample = bitsPerSample / 8;
+            const blockAlign = numCh * bytesPerSample;
+            const byteRate = sampleRate * blockAlign;
+            const dataSize = buffer.length * blockAlign;
+            const headerSize = 44;
+            const arrayBuffer = new ArrayBuffer(headerSize + dataSize);
+            const view = new DataView(arrayBuffer);
 
-      // Download all as ZIP
-      downloadAllBtn.addEventListener('click', async () => {
-        if (generatedSegments.length === 0) {
-          statusMessage.textContent = 'No segments to download.';
-          return;
+            function writeString(offset, str) {
+                for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+            }
+
+            writeString(0, 'RIFF');
+            view.setUint32(4, 36 + dataSize, true);
+            writeString(8, 'WAVE');
+            writeString(12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, format, true);
+            view.setUint16(22, numCh, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, byteRate, true);
+            view.setUint16(32, blockAlign, true);
+            view.setUint16(34, bitsPerSample, true);
+            writeString(36, 'data');
+            view.setUint32(40, dataSize, true);
+
+            let offset = 44;
+            for (let i = 0; i < buffer.length; i++) {
+                for (let ch = 0; ch < numCh; ch++) {
+                    const sample = Math.max(-1, Math.min(1, buffer.getChannelData(ch)[i]));
+                    view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+                    offset += 2;
+                }
+            }
+
+            return new Blob([arrayBuffer], { type: 'audio/wav' });
         }
 
-        if (typeof JSZip === 'undefined') {
-          statusMessage.textContent = 'Loading ZIP library...';
-          await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+        // Register service worker for PWA if manifest exists
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(() => {});
         }
-
-        try {
-          const zip = new JSZip();
-          generatedSegments.forEach(seg => {
-            zip.file(seg.filename, seg.blob);
-          });
-          const zipBlob = await zip.generateAsync({ type: 'blob' });
-          downloadBlob(zipBlob, `${originalFileName}_segments.zip`);
-          statusMessage.textContent = '⬇️ ZIP download started.';
-        } catch (err) {
-          statusMessage.textContent = 'ZIP creation failed: ' + err.message;
-        }
-      });
-
-      function loadScript(src) {
-        return new Promise((resolve, reject) => {
-          const script = document.createElement('script');
-          script.src = src;
-          script.onload = resolve;
-          script.onerror = () => reject(new Error('Failed to load script'));
-          document.head.appendChild(script);
-        });
-      }
-
-      // Preload JSZip
-      if (typeof JSZip === 'undefined') {
-        const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
-        script.async = true;
-        document.head.appendChild(script);
-      }
-    })();
-  </script>
+    </script>
 </body>
 </html>
