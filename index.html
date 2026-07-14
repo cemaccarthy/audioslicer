@@ -360,38 +360,47 @@
         });
 
         function renderSections(count) {
-            sectionsContainer.innerHTML = '';
-            const safeCount = Math.max(1, Math.min(20, parseInt(count) || 1));
-            
-            for (let i = 0; i < safeCount; i++) {
-                const row = document.createElement('div');
-                row.className = 'section-row';
-                row.innerHTML = `
-                    <span class="section-label">${i + 1}</span>
-                    <div class="time-input-group">
-                        <label>Start (sec)</label>
-                        <input type="number" step="0.01" min="0" placeholder="0.00" class="start-time" inputmode="decimal">
-                    </div>
-                    <div class="time-input-group">
-                        <label>End (sec)</label>
-                        <input type="number" step="0.01" min="0" placeholder="0.00" class="end-time" inputmode="decimal">
-                    </div>
-                    <button class="remove-btn" aria-label="Remove section" ${safeCount <= 1 ? 'disabled' : ''}>×</button>
-                `;
-                
-                row.querySelector('.remove-btn').addEventListener('click', () => {
-                    if (sectionsContainer.children.length > 1) {
-                        row.remove();
-                        sectionCountInput.value = sectionsContainer.children.length;
-                        updateRemoveButtons();
-                    }
-                });
-                
-                sectionsContainer.appendChild(row);
+    sectionsContainer.innerHTML = '';
+    const safeCount = Math.max(1, Math.min(20, parseInt(count) || 1));
+    
+    for (let i = 0; i < safeCount; i++) {
+        const row = document.createElement('div');
+        row.className = 'section-row';
+        row.innerHTML = `
+            <span class="section-label">${i + 1}</span>
+            <div class="time-input-group">
+                <label>Start</label>
+                <div style="display:flex;gap:4px;align-items:center;">
+                    <input type="number" step="1" min="0" placeholder="0" class="start-min" inputmode="numeric" style="width:40%;">
+                    <span style="font-size:12px;">m</span>
+                    <input type="number" step="1" min="0" max="59" placeholder="0" class="start-sec" inputmode="numeric" style="width:40%;">
+                    <span style="font-size:12px;">s</span>
+                </div>
+            </div>
+            <div class="time-input-group">
+                <label>End</label>
+                <div style="display:flex;gap:4px;align-items:center;">
+                    <input type="number" step="1" min="0" placeholder="0" class="end-min" inputmode="numeric" style="width:40%;">
+                    <span style="font-size:12px;">m</span>
+                    <input type="number" step="1" min="0" max="59" placeholder="0" class="end-sec" inputmode="numeric" style="width:40%;">
+                    <span style="font-size:12px;">s</span>
+                </div>
+            </div>
+            <button class="remove-btn" aria-label="Remove section" ${safeCount <= 1 ? 'disabled' : ''}>×</button>
+        `;
+        
+        row.querySelector('.remove-btn').addEventListener('click', () => {
+            if (sectionsContainer.children.length > 1) {
+                row.remove();
+                sectionCountInput.value = sectionsContainer.children.length;
+                updateRemoveButtons();
             }
-            updateRemoveButtons();
-        }
-
+        });
+        
+        sectionsContainer.appendChild(row);
+    }
+    updateRemoveButtons();
+}
         function updateRemoveButtons() {
             const btns = sectionsContainer.querySelectorAll('.remove-btn');
             btns.forEach(btn => btn.disabled = sectionsContainer.children.length <= 1);
@@ -444,8 +453,13 @@
             processBtn.disabled = true;
 
             for (let i = 0; i < rows.length; i++) {
-                const start = parseFloat(rows[i].querySelector('.start-time').value) || 0;
-                const end = parseFloat(rows[i].querySelector('.end-time').value) || sourceBuffer.duration;
+                const startMin = parseFloat(rows[i].querySelector('.start-min').value) || 0;
+const startSec = parseFloat(rows[i].querySelector('.start-sec').value) || 0;
+const endMin = parseFloat(rows[i].querySelector('.end-min').value) || 0;
+const endSec = parseFloat(rows[i].querySelector('.end-sec').value) || 0;
+
+const start = (startMin * 60) + startSec;
+const end = (endMin * 60) + endSec;
                 
                 if (end <= start) {
                     statusEl.textContent = `Section ${i + 1}: End must be after start.`;
