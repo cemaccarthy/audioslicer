@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sound Scissors</title>
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #1a1a1a;
+            --accent-color: #007aff;
+            --border-color: #e5e5e5;
+            --danger-color: #ff3b30;
+            --success-color: #34c759;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 { font-size: 1.5rem; margin-bottom: 1.5rem; font-weight: 600; }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* File Input Styling */
+        .file-input-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: #fafafa;
+            font-size: 0.9rem;
+        }
+
+        /* Controls */
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label { font-size: 0.85rem; font-weight: 500; opacity: 0.8; }
+
+        input[type="number"], select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            background: #fff;
+            appearance: none;
+        }
+
+        /* Buttons */
+        button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        button:active { opacity: 0.7; }
+        button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .btn-primary { background-color: var(--accent-color); color: white; }
+        .btn-danger { background-color: var(--danger-color); color: white; }
+        .btn-success { background-color: var(--success-color); color: white; }
+        .btn-outline { 
+            background-color: transparent; 
+            border: 1px solid var(--border-color); 
+            color: var(--text-color);
+        }
+
+        /* Sections List */
+        .sections-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .section-card {
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: #fafafa;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .time-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background: var(--border-color);
+        }
+        .status-badge.done { background: var(--success-color); color: white; }
+        .status-badge.active { background: var(--accent-color); color: white; }
+
+        /* Utility */
+        .hidden { display: none !important; }
+        .duration-display { font-size: 0.8rem; opacity: 0.6; text-align: right; margin-top: -8px;}
+    </style>
+</head>
+<body>
+
+    <h1>Sound Scissors</h1>
+
+    <div class="container">
+        <!-- Source Audio -->
+        <div class="control-group">
+            <label>Source Audio File</label>
+            <input type="file" id="audioFileInput" accept=".mp3,.wav,.aiff,.flac,.m4a,.aac,.ogg">
+            <div id="durationDisplay" class="duration-display hidden"></div>
+        </div>
+
+        <!-- Clear File Button -->
+        <button id="clearFileBtn" class="btn-outline hidden">Clear File</button>
+
+        <!-- Number of Sections -->
+        <div class="control-group" id="numSectionsGroup" style="opacity: 0.4; pointer-events: none;">
+            <label>Number of Sections</label>
+            <input type="number" id="numSectionsInput" min="1" max="50" value="1">
+        </div>
+
+        <!-- Generate Sections Button -->
+        <button id="generateSectionsBtn" class="btn-primary" disabled>Define Sections</button>
+
+        <!-- Dynamic Sections Container -->
+        <div id="sectionsContainer" class="sections-list hidden"></div>
+
+        <!-- Action Area (Save / Continue) -->
+        <div id="actionArea" class="hidden">
+            <button id="saveSectionBtn" class="btn-success hidden">Save Section</button>
+            <button id="continueBtn" class="btn-primary hidden">Continue to Next Section</button>
+            <div id="completionMessage" class="hidden" style="text-align:center; padding:16px; color:var(--success-color); font-weight:600;">
+                All sections saved!
+            </div>
+        </div>
+    </div>
+
+<script>
+/**
+ * Sound Scissors - Sequential Audio Slicer
+ * Vanilla JS Implementation
+ */
+
+// State
+let audioContext = null;
+let audioBuffer = null;
+let sourceFile = null;
+let sections = []; // Array of { start, end, blob, status }
+let currentSectionIndex = 0;
+
+// DOM Elements
+const els = {
+    fileInput: document.getElementById('audioFileInput'),
+    clearBtn: document.getElementById('clearFileBtn'),
+    durationDisplay: document.getElementById('durationDisplay'),
+    numSectionsGroup: document.getElementById('numSectionsGroup'),
+    numSectionsInput: document.getElementById('numSectionsInput'),
+    generateBtn: document.getElementById('generateSectionsBtn'),
+    sectionsContainer: document.getElementById('sectionsContainer'),
+    actionArea: document.getElementById('actionArea'),
+    saveBtn: document.getElementById('saveSectionBtn'),
+    continueBtn: document.getElementById('continueBtn'),
+    completionMsg: document.getElementById('completionMessage')
+};
+
+// --- Audio Loading & Duration Detection ---
+
+els.fileInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    sourceFile = file;
+    els.clearBtn.classList.remove('hidden');
+    els.generateBtn.disabled = true;
+    els.generateBtn.textContent = 'Processing Audio...';
+    
+    try {
+        if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        const arrayBuffer = await file.arrayBuffer();
+        audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        
+        const duration = audioBuffer.duration;
+        els.durationDisplay.textContent = `Duration: ${formatTime(duration)}`;
+        els.durationDisplay.classList.remove('hidden');
+        
+        // Enable controls
+        els.numSectionsGroup.style.opacity = '1';
+        els.numSectionsGroup.style.pointerEvents = 'auto';
+        els.generateBtn.disabled = false;
+        els.generateBtn.textContent = 'Define Sections';
+        
+    } catch (err) {
+        console.error('Audio decode error:', err);
+        alert('Could not process this audio file. Please try a different format.');
+        resetState();
+    }
+});
+
+els.clearBtn.addEventListener('click', () => {
+    els.fileInput.value = '';
+    resetState();
+});
+
+function resetState() {
+    sourceFile = null;
+    audioBuffer = null;
+    sections = [];
+    currentSectionIndex = 0;
+    
+    els.clearBtn.classList.add('hidden');
+    els.durationDisplay.classList.add('hidden');
+    els.numSectionsGroup.style.opacity = '0.4';
+    els.numSectionsGroup.style.pointerEvents = 'none';
+    els.numSectionsInput.value = 1;
+    els.generateBtn.disabled = true;
+    els.generateBtn.textContent = 'Define Sections';
+    els.sectionsContainer.innerHTML = '';
+    els.sectionsContainer.classList.add('hidden');
+    els.actionArea.classList.add('hidden');
+    els.saveBtn.classList.add('hidden');
+    els.continueBtn.classList.add('hidden');
+    els.completionMsg.classList.add('hidden');
+}
+
+// --- Section Generation ---
+
+els.generateBtn.addEventListener('click', () => {
+    if (!audioBuffer) return;
+    
+    const count = parseInt(els.numSectionsInput.value) || 1;
+    const duration = audioBuffer.duration;
+    
+    // Create default sections evenly spaced
+    sections = [];
+    const segmentLength = duration / count;
+    
+    for (let i = 0; i < count; i++) {
+        sections.push({
+            id: i,
+            start: parseFloat((i * segmentLength).toFixed(3)),
+            end: parseFloat(((i + 1) * segmentLength).toFixed(3)),
+            status: 'pending' // pending, ready, saved
+        });
+    }
+    
+    renderSections();
+    updateActionState();
+});
+
+// --- Rendering ---
+
+function renderSections() {
+    els.sectionsContainer.innerHTML = '';
+    els.sectionsContainer.classList.remove('hidden');
+    els.actionArea.classList.remove('hidden');
+    
+    const duration = audioBuffer.duration;
+    // Generate time options in 0.1s increments
+    const timeOptions = generateTimeOptions(duration);
+    
+    sections.forEach((section, idx) => {
+        const card = document.createElement('div');
+        card.className = 'section-card';
+        card.dataset.index = idx;
+        
+        const isActive = idx === currentSectionIndex;
+        const statusClass = section.status === 'saved' ? 'done' : (isActive ? 'active' : '');
+        const statusText = section.status === 'saved' ? 'Saved' : (isActive ? 'Current' : 'Queued');
+        
+        card.innerHTML = `
+            <div class="section-header">
+                <span>Section ${idx + 1}</span>
+                <span class="status-badge ${statusClass}">${statusText}</span>
+            </div>
+            <div class="time-row">
+                <div class="control-group">
+                    <label>Start</label>
+                    <select data-type="start" data-index="${idx}" ${!isActive || section.status === 'saved' ? 'disabled' : ''}>
+                        ${timeOptions.map(t => 
+                            `<option value="${t}" ${Math.abs(t - section.start) < 0.05 ? 'selected' : ''}>${formatTime(t)}</option>`
+                        ).join('')}
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>End</label>
+                    <select data-type="end" data-index="${idx}" ${!isActive || section.status === 'saved' ? 'disabled' : ''}>
+                        ${timeOptions.map(t => 
+                            `<option value="${t}" ${Math.abs(t - section.end) < 0.05 ? 'selected' : ''}>${formatTime(t)}</option>`
+                        ).join('')}
+                    </select>
+                </div>
+            </div>
+        `;
+        
+        els.sectionsContainer.appendChild(card);
+    });
+    
+    // Attach change listeners to active selects
+    document.querySelectorAll(`select[data-index="${currentSectionIndex}"]`).forEach(sel => {
+        sel.addEventListener('change', handleTimeChange);
+    });
+}
+
+function generateTimeOptions(maxDuration) {
+    const options = [];
+    const step = 0.1; // 100ms precision
+    for (let t = 0; t <= maxDuration + step; t += step) {
+        options.push(parseFloat(t.toFixed(3)));
+    }
+    return options;
+}
+
+function handleTimeChange(e) {
+    const idx = parseInt(e.target.dataset.index);
+    const type = e.target.dataset.type;
+    const val = parseFloat(e.target.value);
+    
+    if (type === 'start') sections[idx].start = val;
+    if (type === 'end') sections[idx].end = val;
+    
+    // Validate: ensure end > start
+    if (sections[idx].end <= sections[idx].start) {
+        // Auto-correct visually but don't block
+        e.target.style.borderColor = 'var(--danger-color)';
+    } else {
+        e.target.style.borderColor = 'var(--border-color)';
+    }
+}
+
+// --- Sequential Save Flow ---
+
+function updateActionState() {
+    const section = sections[currentSectionIndex];
+    
+    els.saveBtn.classList.add('hidden');
+    els.continueBtn.classList.add('hidden');
+    els.completionMsg.classList.add('hidden');
+    
+    if (!section) {
+        // All done
+        els.completionMsg.classList.remove('hidden');
+        return;
+    }
+    
+    if (section.status === 'saved') {
+        // Already saved (shouldn't normally hit this unless revisiting)
+        els.continueBtn.classList.remove('hidden');
+    } else {
+        // Ready to save current
+        els.saveBtn.classList.remove('hidden');
+    }
+}
+
+els.saveBtn.addEventListener('click', async () => {
+    const section = sections[currentSectionIndex];
+    if (!section || !audioBuffer) return;
+    
+    els.saveBtn.disabled = true;
+    els.saveBtn.textContent = 'Processing...';
+    
+    try {
+        const blob = await sliceAudio(audioBuffer, section.start, section.end);
+        downloadBlob(blob, `${sourceFile.name}_section${currentSectionIndex + 1}.wav`);
+        
+        section.status = 'saved';
+        renderSections(); // Re-render to show saved badge and disable inputs
+        
+        els.saveBtn.classList.add('hidden');
+        els.continueBtn.classList.remove('hidden');
+        els.continueBtn.textContent = currentSectionIndex < sections.length - 1 
+            ? 'Continue to Next Section' 
+            : 'Finish';
+            
+    } catch (err) {
+        console.error('Slice error:', err);
+        alert('Failed to process section. See console for details.');
+    } finally {
+        els.saveBtn.disabled = false;
+        els.saveBtn.textContent = 'Save Section';
+    }
+});
+
+els.continueBtn.addEventListener('click', () => {
+    currentSectionIndex++;
+    if (currentSectionIndex >= sections.length) {
+        updateActionState(); // Shows completion message
+    } else {
+        renderSections();
+        updateActionState();
+    }
+});
+
+// --- Audio Processing Utilities ---
+
+async function sliceAudio(buffer, startTime, endTime) {
+    const sampleRate = buffer.sampleRate;
+    const startFrame = Math.floor(startTime * sampleRate);
+    const endFrame = Math.floor(endTime * sampleRate);
+    const frameCount = endFrame - startFrame;
+    
+    if (frameCount <= 0) throw new Error('Invalid time range');
+    
+    // Create new buffer for the slice
+    const slicedBuffer = audioContext.createBuffer(
+        buffer.numberOfChannels,
+        frameCount,
+        sampleRate
+    );
+    
+    // Copy channel data
+    for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
+        const sourceData = buffer.getChannelData(ch);
+        const targetData = slicedBuffer.getChannelData(ch);
+        for (let i = 0; i < frameCount; i++) {
+            targetData[i] = sourceData[startFrame + i];
+        }
+    }
+    
+    // Encode to WAV
+    return encodeWAV(slicedBuffer);
+}
+
+function encodeWAV(buffer) {
+    const numChannels = buffer.numberOfChannels;
+    const sampleRate = buffer.sampleRate;
+    const format = 1; // PCM
+    const bitDepth = 16;
+    
+    const bytesPerSample = bitDepth / 8;
+    const blockAlign = numChannels * bytesPerSample;
+    const dataSize = buffer.length * blockAlign;
+    const headerSize = 44;
+    const arrayBuffer = new ArrayBuffer(headerSize + dataSize);
+    const view = new DataView(arrayBuffer);
+    
+    // RIFF Header
+    writeString(view, 0, 'RIFF');
+    view.setUint32(4, 36 + dataSize, true);
+    writeString(view, 8, 'WAVE');
+    
+    // fmt chunk
+    writeString(view, 12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, format, true);
+    view.setUint16(22, numChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * blockAlign, true);
+    view.setUint16(32, blockAlign, true);
+    view.setUint16(34, bitDepth, true);
+    
+    // data chunk
+    writeString(view, 36, 'data');
+    view.setUint32(40, dataSize, true);
+    
+    // Interleave channels and write samples
+    let offset = 44;
+    for (let i = 0; i < buffer.length; i++) {
+        for (let ch = 0; ch < numChannels; ch++) {
+            const sample = Math.max(-1, Math.min(1, buffer.getChannelData(ch)[i]));
+            const intSample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+            view.setInt16(offset, intSample, true);
+            offset += 2;
+        }
+    }
+    
+    return new Blob([arrayBuffer], { type: 'audio/wav' });
+}
+
+function writeString(view, offset, str) {
+    for (let i = 0; i < str.length; i++) {
+        view.setUint8(offset + i, str.charCodeAt(i));
+    }
+}
+
+function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function formatTime(seconds) {
+    const m = Math.floor(seconds / 60);
+    const s = (seconds % 60).toFixed(1);
+    return `${m}:${s.padStart(4, '0')}`;
+}
+
+</script>
+</body>
+</html>
